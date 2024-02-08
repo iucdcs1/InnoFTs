@@ -8,6 +8,8 @@ from aiogram import Dispatcher, Bot
 from handlers.callbackHandlers import Callback_router
 from handlers.messageHandlers import Message_router
 from handlers.FSMHandlers import FSM_router
+from handlers.passangerHandlers import passenger_router
+
 from dotenv import load_dotenv
 
 from utilities.scheduler import setup_scheduler
@@ -19,7 +21,7 @@ dp = Dispatcher()
 
 
 async def main() -> None:
-    dp.include_routers(Callback_router, Message_router, FSM_router)
+    dp.include_routers(Callback_router, Message_router, FSM_router, passenger_router)
     await bot.delete_webhook(drop_pending_updates=True)
     scheduler = await setup_scheduler()
     try:
