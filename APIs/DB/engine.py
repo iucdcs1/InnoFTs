@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy import BigInteger, Column, Integer, String, Boolean, PrimaryKeyConstraint, UniqueConstraint, \
-    ForeignKeyConstraint, ForeignKey, Table
+    ForeignKeyConstraint, ForeignKey, Table, DateTime, Time
 
 load_dotenv(".env")
 url = os.getenv("SQLALCHEMY_URL")
@@ -37,7 +37,7 @@ class User(Base):
         UniqueConstraint('telegram_id')
     )
 
-    routes = relationship("Route", secondary=passenger_routes, back_populates="passengers")
+    routes = relationship("Route", secondary=passenger_routes, back_populates="users")
 
 
 class Route(Base):
@@ -46,7 +46,7 @@ class Route(Base):
     id = Column(Integer)
     driver_id = Column(Integer)
 
-    passanger_ids = relationship("User", secondary=passenger_routes, back_populates="routes")
+    users = relationship("User", secondary=passenger_routes, back_populates="routes")
 
     place_from_id = Column(Integer)
     place_to_id = Column(Integer)
@@ -54,6 +54,9 @@ class Route(Base):
     available_places = Column(Integer)
 
     cost = Column(Integer)
+
+    date_field = Column(String(20))
+    time_field = Column(Time)
 
     __table_args__ = (
         PrimaryKeyConstraint('id', name='route_pk'),

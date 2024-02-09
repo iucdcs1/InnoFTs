@@ -5,12 +5,13 @@ import sys
 
 from aiogram import Dispatcher, Bot
 
+from dotenv import load_dotenv
+
 from APIs.DB.engine import db_engine_start
 
+from handlers.FSMHandlers import FSM_router
 from handlers.callbackHandlers import Callback_router
 from handlers.messageHandlers import Message_router
-from handlers.FSMHandlers import FSM_router
-from dotenv import load_dotenv
 
 from utilities.scheduler import setup_scheduler
 
