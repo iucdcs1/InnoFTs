@@ -3,10 +3,10 @@ from aiogram.types import Message
 
 # from APIs.DB.db_requests import *
 
-Message_router = Router()
+Test_router = Router()
 
 
-@Message_router.message(F.text == 'check')
+@Test_router.message(F.text == 'check')
 async def check(message: Message):
     pass
     '''
@@ -22,9 +22,9 @@ async def check(message: Message):
 
     await message.answer('\n\n'.join([str(x) for x in (await get_routes_filtered('Иннополис', 'Казань', 1, 120, '10.02.2024', '10:45'))]))
 
-    await message.answer('\n\n'.join([str(x) for x in (await get_passanger_routes(1))]))
+    await message.answer('\n\n'.join([str(x) for x in (await get_passenger_routes(1))]))
 
     await subscribe_route(1, 1)
 
-    await message.answer('\n\n'.join([str(x) for x in (await get_passanger_routes(1))]))
+    await message.answer('\n\n'.join([str(x) for x in (await get_passenger_routes(1))]))
     '''
