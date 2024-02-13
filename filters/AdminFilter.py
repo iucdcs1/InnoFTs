@@ -6,4 +6,8 @@ from APIs.DB.db_requests import get_user
 
 class AdminCommandFilter(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return (await get_user(message.from_user.id)).is_admin
+        user = await get_user(message.from_user.id)
+        if user:
+            return user.is_admin
+        else:
+            return False
