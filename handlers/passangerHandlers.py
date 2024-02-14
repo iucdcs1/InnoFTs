@@ -6,24 +6,28 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from utilities.models import Route
+from APIs.DB.db_requests import get_routes_filtered, get_route
 from states import PassengerFindRoute
 from keyboards.reply import reply_date_now_markup, reply_main_routs_markup
+from keyboards.inline import inline_choose_route_markup
 from utilities.checkValidDate import is_valid_date
 from utilities.regex import time_pattern_interval_first, time_pattern_interval_second, time_pattern_interval_third, \
     time_pattern_single_first, time_pattern_single_second, time_pattern_interval_fourth
 from utilities.changeState import change_state
+from utilities.writeRouteInfo import write_route_info
 
-passenger_router = Router()
+Passenger_router = Router()
 
 
-@passenger_router.message(Command(commands=['test_passenger']))
+@Passenger_router.message(Command(commands=['test_passenger']))
 async def test_passenger(message: Message, state: FSMContext):
     await state.set_state(PassengerFindRoute.set_route)
     await message.answer(text='Привет для того чтобы найти машину, вам надо выбрать маршрут',
                          reply_markup=reply_main_routs_markup())
 
 
-@passenger_router.message(PassengerFindRoute.set_route)
+@Passenger_router.message(PassengerFindRoute.set_route)
 async def get_passenger_route(message: Message, state: FSMContext):
     await state.update_data(route=message.text)
     await change_state(state, PassengerFindRoute.set_date)
@@ -32,7 +36,7 @@ async def get_passenger_route(message: Message, state: FSMContext):
         , reply_markup=reply_date_now_markup())
 
 
-@passenger_router.message(PassengerFindRoute.set_date)
+@Passenger_router.message(PassengerFindRoute.set_date)
 async def get_passenger_date(message: Message, state: FSMContext):
     if not is_valid_date(message.text.replace(' ', '')):
         return await message.answer('я вас не понял, введите дату формата DD.MM.YYYY',
@@ -43,7 +47,7 @@ async def get_passenger_date(message: Message, state: FSMContext):
         text='теперь yажите пожалуста время.\nВ ведите интервал времени в формате HH:MM - HH:MM или HH:MM если ищете водителей на конкретное время.')
 
 
-@passenger_router.message(PassengerFindRoute.set_time)
+@Passenger_router.message(PassengerFindRoute.set_time)
 async def get_passenger_time(message: Message, state: FSMContext):
     correct_interval = time_pattern_interval_first.fullmatch(
         message.text) is not None or time_pattern_interval_second.fullmatch(
@@ -58,25 +62,41 @@ async def get_passenger_time(message: Message, state: FSMContext):
     await message.answer(text='супер, введите пожалуйста сколько вы готовы заплатить за поездку.')
 
 
-@passenger_router.message(PassengerFindRoute.set_value, F.text.isdigit())
+@Passenger_router.message(PassengerFindRoute.set_value, F.text.isdigit())
 async def get_passenger_value(message: Message, state: FSMContext):
-    await state.update_data(value=message.text)
+    await state.update_data(cost=message.text)
     await change_state(state, PassengerFindRoute.set_seats_amount)
     await message.answer(text='ура, остался последний шаг, сколько мест в салоне вам потребуеться?')
 
 
-@passenger_router.message(PassengerFindRoute.set_value)
+@Passenger_router.message(PassengerFindRoute.set_value)
 async def get_passenger_value_is_not_digit(message: Message):
     await message.answer(text='пожалуйста введите число.')
 
 
-@passenger_router.message(PassengerFindRoute.set_seats_amount, F.text.isdigit())
+@Passenger_router.message(PassengerFindRoute.set_seats_amount, F.text.isdigit())
 async def get_passenger_seats_amount(message: Message, state: FSMContext):
-    await state.update_data(seats_amount=message.text)
+    await state.update_data(required_places=message.text)
     await message.answer(text='ищем подходящих водителей...')
-    # ТУТ ДОЛЖНО БЫТЬ ОБРАЩЕНИЕ В DB API
+    await change_state(state, PassengerFindRoute.final)
+    data = await state.get_data()
+    place_from = str(data['route']).split('-')[0]
+    place_to = str(data['route']).split('-')[1]
+    seats_amount = int(data['required_places'])
+    cost = int(data['cost'])
+    date = str(data['date'])
+    time = str(data['time'])
+    routes = get_routes_filtered(place_from, place_to, seats_amount, cost, date, time)
+    routes_ids = map(lambda x: x.id, routes)
+    if not routes_ids:
+        await state.clear()
+        return await message.answer('к сожалению подходящих поездок не найдено, попробуйте позже')
+    await state.update_data(route_ids=routes_ids)
+    await state.update_data(current_index=0)
+    await message.answer(text='нашёл кое-что для вас')
+    await message.answer(text=write_route_info(routes[0]), reply_markup=inline_choose_route_markup())
 
 
-@passenger_router.message(PassengerFindRoute.set_seats_amount)
+@Passenger_router.message(PassengerFindRoute.set_seats_amount)
 async def get_passenger_seats_amount_is_not_digit(message: Message):
     await message.answer(text='пожалуйста введите число.')

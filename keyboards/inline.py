@@ -19,3 +19,9 @@ def inline_num_keyboard_markup(data: str, final=False) -> InlineKeyboardMarkup:
     builder.button(text='ok', callback_data=f'i_{data}_ok')
     builder.adjust(3, 3, 3, 1, 1)
     return builder.as_markup(resize_keyboard=True)
+
+
+def inline_choose_route_markup() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    return builder.button(text='<', callback_data='r_prev').button(text='>', callback_data='r_next').button(
+        text='выбрать', callback_data='r_sub').adjust(2, 1).as_markup(resize_keyboard=True)

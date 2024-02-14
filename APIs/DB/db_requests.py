@@ -153,7 +153,8 @@ async def subscribe_route(telegram_id: int, chosen_route_id: int) -> None:
         passanger_id = (await get_user(telegram_id)).id
 
         await session.execute(
-            update(Route_DB).values(available_places=Route_DB.available_places - 1).where(Route_DB.id == chosen_route_id)
+            update(Route_DB).values(available_places=Route_DB.available_places - 1).where(
+                Route_DB.id == chosen_route_id)
         )
 
         await session.execute(passenger_routes.insert().values(
