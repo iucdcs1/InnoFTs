@@ -20,7 +20,8 @@ class Base(AsyncAttrs, DeclarativeBase):
 
 passenger_routes = Table('passenger_routes', Base.metadata,
                          Column('user_id', Integer, ForeignKey('users.id')),
-                         Column('route_id', Integer, ForeignKey('routes.id'))
+                         Column('route_id', Integer, ForeignKey('routes.id')),
+                         Column('amount_of_passengers', Integer, nullable=False)
                          )
 
 
