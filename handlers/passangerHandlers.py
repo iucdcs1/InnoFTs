@@ -1,44 +1,55 @@
-import datetime
-import re
-
-from aiogram import Router, F, Bot
+from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
+from aiogram_calendar import SimpleCalendarCallback, SimpleCalendar
 
-from utilities.models import Route
-from APIs.DB.db_requests import get_routes_filtered, get_route
+from APIs.DB.db_requests import get_routes_filtered
+from keyboards.inline import inline_choose_route_markup, inline_main_routs_markup
+from keyboards.mainKB import passenger_main_kb
+from keyboards.reply import reply_date_now_markup
 from states import PassengerFindRoute
-from keyboards.reply import reply_date_now_markup, reply_main_routs_markup
-from keyboards.inline import inline_choose_route_markup
+from utilities.changeState import change_state
 from utilities.checkValidDate import is_valid_date
 from utilities.regex import time_pattern_interval_first, time_pattern_interval_second, time_pattern_interval_third, \
     time_pattern_single_first, time_pattern_single_second, time_pattern_interval_fourth
-from utilities.changeState import change_state
 from utilities.writeRouteInfo import write_route_info
 
 Passenger_router = Router()
 
 
-@Passenger_router.massage(F.text == 'Попутчик')
-async def start_passenger_handle(bot: Bot, message: Message, state: FSMContext):
-    await state.set_state(PassengerFindRoute.set_route)
-    await message.answer(text='Привет для того чтобы найти машину, вам надо выбрать маршрут',
-                         reply_markup=reply_main_routs_markup())
+@Passenger_router.message(F.text == 'Найти попутку')
+async def start_passenger_handle(message: Message):
+    await message.answer(text='Выберите место отправления:',
+                         reply_markup=await inline_main_routs_markup())
 
 
-@Passenger_router.message(Command(commands=['test_passenger']))
-async def test_passenger(message: Message, state: FSMContext):
-    await state.set_state(PassengerFindRoute.set_route)
-    await message.answer(text='Привет для того чтобы найти машину, вам надо выбрать маршрут',
-                         reply_markup=reply_main_routs_markup())
+@Passenger_router.callback_query(F.data.startswith('return_fd'))
+async def return_to_passenger_menu(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer('Открыто меню попутчика', reply_markup=passenger_main_kb)
 
 
-@Passenger_router.message(PassengerFindRoute.set_route)
-async def get_passenger_route(message: Message, state: FSMContext):
-    await state.update_data(route=message.text)
+@Passenger_router.callback_query(F.data.startswith('chosen_first_destination'))
+async def end_point_passanger_handler(callback: CallbackQuery, state: FSMContext):
+    await callback.message.delete()
+    place_id = int(callback.data.split('_')[3])
+    await state.update_data(route_start=place_id)
+    await callback.message.answer(text='Выберите место назначения:',
+                                  reply_markup=await inline_main_routs_markup(chosen=place_id))
+
+
+@Passenger_router.callback_query(F.data.startswith('return_sd'))
+async def return_to_passenger_menu(callback: CallbackQuery):
+    await callback.message.edit_text(text='Выберите место отправления:', reply_markup=await inline_main_routs_markup())
+
+
+@Passenger_router.callback_query(F.data.startswith('chosen_second_destination'))
+async def end_point_passanger_handler(callback: CallbackQuery, state: FSMContext):
+    place_id = int(callback.data.split('_')[3])
+    await state.update_data(route_end=place_id)
     await change_state(state, PassengerFindRoute.set_date)
-    await message.answer(
+    await callback.message.answer(
         text='отлично, мне надо знать когда вы планируете поездку.'
         , reply_markup=reply_date_now_markup())
 
@@ -87,14 +98,14 @@ async def get_passenger_seats_amount(message: Message, state: FSMContext):
     await message.answer(text='ищем подходящих водителей...')
     await change_state(state, PassengerFindRoute.final)
     data = await state.get_data()
-    place_from = str(data['route']).split('-')[0]
-    place_to = str(data['route']).split('-')[1]
+    place_from = data['route_start']
+    place_to = data['route_end']
     seats_amount = int(data['required_places'])
     cost = int(data['cost'])
     date = str(data['date'])
     time = str(data['time'])
-    routes = get_routes_filtered(place_from, place_to, seats_amount, cost, date, time)
-    routes_ids = map(lambda x: x.id, routes)
+    routes = await get_routes_filtered(place_from, place_to, seats_amount, cost, date, time)
+    routes_ids = list(map(lambda x: x.id, routes))
     if not routes_ids:
         await state.clear()
         return await message.answer('к сожалению подходящих поездок не найдено, попробуйте позже')

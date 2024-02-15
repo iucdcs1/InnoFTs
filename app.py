@@ -17,7 +17,7 @@ from handlers.mainMenuHandlers import MainMenu_router
 from utilities.scheduler import setup_scheduler
 
 load_dotenv(".env")
-token = '6731247765:AAF4DfEabd-xA8dIzX2rEyJxcK10OF7TwPg'#os.getenv("TOKEN_API")
+token = os.getenv("TOKEN_API")
 bot = Bot(token, parse_mode="HTML")
 dp = Dispatcher()
 
@@ -26,9 +26,7 @@ async def main() -> None:
     await db_engine_start()
     scheduler = await setup_scheduler()
 
-    dp.include_routers(Callback_router)
-    dp.include_routers(Passenger_router)
-    dp.include_routers(Test_router, MainMenu_router)
+    dp.include_routers(Callback_router, Passenger_router, Test_router, MainMenu_router)
     await bot.delete_webhook(drop_pending_updates=True)
 
     try:

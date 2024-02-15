@@ -41,6 +41,22 @@ async def get_place(place_id: int) -> Place:
         return result
 
 
+# TODO: Add to API documentation
+async def get_places() -> [Place]:
+    async with async_session() as session:
+        result_query = await session.scalars(select(Place_DB))
+
+        result_places = []
+
+        for place in result_query:
+            temp_place = Place()
+            temp_place.parse(place)
+
+            result_places.append(temp_place)
+
+        return result_places
+
+
 async def get_place_by_name(place_name: str) -> Place:
     async with async_session() as session:
         result = await session.scalar(select(Place_DB).where(Place_DB.name == place_name))
@@ -84,7 +100,8 @@ async def get_driver_routes(telegram_id: int) -> [Route]:
             raise ValueError(f'Driver with telegram_id ({telegram_id}) not found')
 
 
-async def get_routes_filtered(place_from: str, place_to: str, passengers_amount: int, cost: int, date: str,
+# TODO: Edit API documentation related to place_from / place_to: Swapped to ID search
+async def get_routes_filtered(place_from_id: int, place_to_id: int, passengers_amount: int, cost: int, date: str,
                               time: str) -> [Route]:
     async with async_session() as session:
         if len(time.split('-')) == 2:
@@ -94,14 +111,14 @@ async def get_routes_filtered(place_from: str, place_to: str, passengers_amount:
                 time_interval_2 = "00:00-" + time_end
                 next_date = (datetime.datetime.strptime(date, "%d.%m.%Y") +
                              datetime.timedelta(days=1)).strftime("%d.%m.%Y")
-                return (await get_routes_filtered(place_from,
-                                                  place_to,
+                return (await get_routes_filtered(place_from_id,
+                                                  place_to_id,
                                                   passengers_amount,
                                                   cost,
                                                   date,
                                                   time_interval_1)) + \
-                    (await get_routes_filtered(place_from,
-                                               place_to,
+                    (await get_routes_filtered(place_from_id,
+                                               place_to_id,
                                                passengers_amount,
                                                cost,
                                                next_date,
@@ -109,8 +126,8 @@ async def get_routes_filtered(place_from: str, place_to: str, passengers_amount:
         elif len(time.split('-')) == 1:
             time_start, time_end = time, (datetime.timedelta(minutes=30) +
                                           datetime.datetime.strptime(time, "%H:%M")).strftime("%H:%M")
-            return await get_routes_filtered(place_from,
-                                             place_to,
+            return await get_routes_filtered(place_from_id,
+                                             place_to_id,
                                              passengers_amount,
                                              cost,
                                              date,
@@ -118,29 +135,12 @@ async def get_routes_filtered(place_from: str, place_to: str, passengers_amount:
         else:
             raise ValueError('Wrong amount of intervals')
 
-        if not (((await get_place_by_name(place_from)) is not None) & (
-                (await get_place_by_name(place_to)) is not None)):
-            raise ValueError('Wrong place_from or place_to. Recheck')
-
-        req_place_from = (await get_place_by_name(place_from))
-
-        if req_place_from:
-            req_place_from_id = req_place_from.id
-        else:
-            raise ValueError('Requested place not found')
-
-        req_place_to = (await get_place_by_name(place_to))
-
-        if req_place_to:
-            req_place_to_id = req_place_to.id
-        else:
-            raise ValueError('Requested place not found')
 
         time_start = datetime.time(hour=int(time_start.split(':')[0]), minute=int(time_start.split(':')[1]))
         time_end = datetime.time(hour=int(time_end.split(':')[0]), minute=int(time_end.split(':')[1]))
 
-        query_result = await session.scalars(select(Route_DB).where((Route_DB.place_from_id == req_place_from_id),
-                                                                    (Route_DB.place_to_id == req_place_to_id),
+        query_result = await session.scalars(select(Route_DB).where((Route_DB.place_from_id == place_from_id),
+                                                                    (Route_DB.place_to_id == place_to_id),
                                                                     (Route_DB.available_places >= passengers_amount),
                                                                     (Route_DB.cost <= cost),
                                                                     (Route_DB.date_field == date),

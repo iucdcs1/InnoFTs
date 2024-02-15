@@ -1,11 +1,25 @@
 from aiogram.types import InlineKeyboardMarkup
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton
+
+from APIs.DB.db_requests import get_places
 
 
-def date_selection_markup(dates) -> InlineKeyboardMarkup:
+async def inline_main_routs_markup(chosen: int = -1) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    for date in dates:
-        builder.button(text=f'{date}', callback_data=f'd_{date}')
+
+    destinations = await get_places()
+
+    if chosen == -1:  # If it is the departure point
+        for i, destination in enumerate(destinations):
+            builder.button(text=f"{destination.name}", callback_data=f"chosen_first_destination_{destination.id}")
+        return builder.adjust(2, repeat=True).row(
+            InlineKeyboardButton(text='<-', callback_data=f"return_fd")).as_markup(one_time_keyboard=True)
+    else:  # If it is the destination point
+        for i, destination in enumerate(destinations):
+            if destination.id != chosen:
+                builder.button(text=f"{destination.name}", callback_data=f"chosen_second_destination_{destination.id}")
+        return builder.adjust(2, repeat=True).row(
+            InlineKeyboardButton(text='<-', callback_data=f"return_sd")).as_markup(one_time_keyboard=True)
 
 
 def inline_num_keyboard_markup(data: str, final=False) -> InlineKeyboardMarkup:
