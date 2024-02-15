@@ -1,7 +1,7 @@
 import datetime
 import re
 
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -18,6 +18,13 @@ from utilities.changeState import change_state
 from utilities.writeRouteInfo import write_route_info
 
 Passenger_router = Router()
+
+
+@Passenger_router.massage(F.text == 'Попутчик')
+async def start_passenger_handle(bot: Bot, message: Message, state: FSMContext):
+    await state.set_state(PassengerFindRoute.set_route)
+    await message.answer(text='Привет для того чтобы найти машину, вам надо выбрать маршрут',
+                         reply_markup=reply_main_routs_markup())
 
 
 @Passenger_router.message(Command(commands=['test_passenger']))
