@@ -4,7 +4,6 @@ from aiogram.types import CallbackQuery
 
 from APIs.DB.db_requests import get_route, subscribe_route
 from states import PassengerFindRoute
-from utilities.models import Route
 from utilities.validateRoute import validate_route
 from utilities.writeRouteInfo import write_route_info
 from keyboards.inline import inline_choose_route_markup

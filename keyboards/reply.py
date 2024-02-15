@@ -12,5 +12,5 @@ def reply_date_now_markup() -> ReplyKeyboardMarkup:
 
 def reply_main_routs_markup() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text='Казань-Инополис')).add(KeyboardButton(text='Инополис-Казань'))
+    builder.add(KeyboardButton(text='Казань-Иннополис')).add(KeyboardButton(text='Иннополис-Казань'))
     return builder.as_markup(one_time_keyboard=True)
