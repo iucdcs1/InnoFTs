@@ -85,7 +85,7 @@ async def get_passenger_date(callback: CallbackQuery, callback_data: CallbackDat
     calendar.set_dates_range(datetime.datetime.now() - datetime.timedelta(days=1),
                              datetime.datetime.now() + datetime.timedelta(days=30))
     selected, date = await calendar.process_selection(callback, callback_data)
-    if not date:
+    if not date and isinstance(date, bool):
         return await callback.message.answer(text='Выберите место назначения:',
                                              reply_markup=await inline_main_routs_markup(
                                                  chosen=(await state.get_data())['route_start'])
