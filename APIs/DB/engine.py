@@ -1,10 +1,10 @@
 import os
 
 from dotenv import load_dotenv
+from sqlalchemy import BigInteger, Column, Integer, String, Boolean, PrimaryKeyConstraint, UniqueConstraint, \
+    ForeignKeyConstraint, ForeignKey, Table, Time
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, relationship
-from sqlalchemy import BigInteger, Column, Integer, String, Boolean, PrimaryKeyConstraint, UniqueConstraint, \
-    ForeignKeyConstraint, ForeignKey, Table, DateTime, Time
 
 load_dotenv(".env")
 url = os.getenv("SQLALCHEMY_URL")

@@ -17,19 +17,30 @@ async def get_callback_when_choose_route(call: CallbackQuery, bot: Bot, state: F
     current_index = int(data['current_index'])
     cb = call.data.split('_')
     if cb[1] == 'prev':
-        current_index = current_index - 1
-    if cb[1] == 'next':
-        current_index = current_index + 1
+        if current_index == 0:
+            current_index = len(data['route_ids']) - 1
+        else:
+            current_index -= 1
+    elif cb[1] == 'next':
+        if current_index == len(data['route_ids']) - 1:
+            current_index = 0
+        else:
+            current_index += 1
+
+    await state.update_data(current_index=current_index)
+
     route_ids = data['route_ids']
+
     route = await get_route(route_ids[current_index])
+
     if cb[1] == 'sub':
-        if validate_route(route):
-            await subscribe_route(route_ids[current_index], call.from_user.id)
+        if validate_route(route, data['required_places']):
+            await subscribe_route(route_ids[current_index], call.from_user.id, data['required_places'])
             return await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                                text=write_route_info(
                                                    route) + f'[водитель](tg://user?id{route.driver_id})',
                                                parse_mode='Markdown')
-#           TODO: notification for driver?
+    #           TODO: notification for driver?
     route_ids = data['route_ids']
     route = await get_route(route_ids[current_index])
     required_places: int = int(data['required_places'])

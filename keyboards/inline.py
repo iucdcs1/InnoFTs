@@ -22,17 +22,10 @@ async def inline_main_routs_markup(chosen: int = -1) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text='<-', callback_data=f"return_sd")).as_markup(one_time_keyboard=True)
 
 
-def inline_num_keyboard_markup(data: str, final=False) -> InlineKeyboardMarkup:
+def return_back_markup(phase: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    for i in range(9):
-        builder.button(text=f'{i}', callback_data=f'i_{data}{i}_nok')
-    builder.button(text='clear', callback_data=f'i_{data[:-1]}_nok')
-    if not final:
-        builder.adjust(3, 3, 3, 1)
-        return builder.as_markup(resize_keyboard=True)
-    builder.button(text='ok', callback_data=f'i_{data}_ok')
-    builder.adjust(3, 3, 3, 1, 1)
-    return builder.as_markup(resize_keyboard=True)
+    builder.button(text="<-", callback_data=f"return_{phase}")
+    return builder.as_markup(one_time_keyboard=True)
 
 
 def inline_choose_route_markup() -> InlineKeyboardMarkup:
