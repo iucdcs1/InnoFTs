@@ -9,10 +9,10 @@ from dotenv import load_dotenv
 
 from APIs.DB.engine import db_engine_start
 
-from handlers.callbackHandlers import Callback_router
-from handlers.passangerHandlers import Passenger_router
-from handlers.dbTestHandlers import Test_router
-from handlers.mainMenuHandlers import MainMenu_router
+from handlers.Passenger.callbackHandlers import Passenger_Callback_router
+from handlers.Passenger.messageHandlers import Passenger_Message_router
+from handlers.Common.dbTestHandlers import Test_router
+from handlers.Common.mainMenuHandlers import MainMenu_router
 
 from utilities.scheduler import setup_scheduler
 
@@ -26,7 +26,7 @@ async def main() -> None:
     await db_engine_start()
     scheduler = await setup_scheduler()
 
-    dp.include_routers(Callback_router, Passenger_router, Test_router, MainMenu_router)
+    dp.include_routers(Passenger_Callback_router, Passenger_Message_router, Test_router, MainMenu_router)
     await bot.delete_webhook(drop_pending_updates=True)
 
     try:

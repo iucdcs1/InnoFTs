@@ -135,7 +135,6 @@ async def get_routes_filtered(place_from_id: int, place_to_id: int, passengers_a
         else:
             raise ValueError('Wrong amount of intervals')
 
-
         time_start = datetime.time(hour=int(time_start.split(':')[0]), minute=int(time_start.split(':')[1]))
         time_end = datetime.time(hour=int(time_end.split(':')[0]), minute=int(time_end.split(':')[1]))
 
@@ -207,4 +206,3 @@ async def get_route_passengers(chosen_route_id: int) -> [User]:
         passengers = [(await get_user_by_id(x)) for x in passengers_IDs]
 
         return passengers
-

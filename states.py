@@ -12,3 +12,7 @@ class PassengerFindRoute(StatesGroup):
     set_value = State()
     set_seats_amount = State()
     final = State()
+
+
+class PassengerSubscription(StatesGroup):
+    selected_routes = State()
